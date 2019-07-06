@@ -68,17 +68,15 @@ function onRecvbyte(player, msg, byte)
 end
 
 function Player.getMonsterTier(self)
-	local tier = CONST_MONSTER_TIER_BRONZE
-	if (self:getLevel() > 0 and self:getLevel() < 50) then
-		tier = CONST_MONSTER_TIER_BRONZE
-	elseif (self:getLevel() >= 50 and self:getLevel() < 100) then
-		tier = CONST_MONSTER_TIER_SILVER
-	elseif (self:getLevel() >= 100 and self:getLevel() < 150) then
-		tier = CONST_MONSTER_TIER_GOLD
-	elseif (self:getLevel() >= 150) then
-		tier = CONST_MONSTER_TIER_PLATINUM
+	if self:getLevel() > 0 and self:getLevel() < 50 then
+		return CONST_MONSTER_TIER_BRONZE
+	elseif self:getLevel() >= 50 and self:getLevel() < 100 then
+		return CONST_MONSTER_TIER_SILVER
+	elseif self:getLevel() >= 100 and self:getLevel() < 150 then
+		return CONST_MONSTER_TIER_GOLD
+	elseif self:getLevel() >= 150 then
+		return CONST_MONSTER_TIER_PLATINUM
 	end
-	return tier
 end
 
 function Player.setInitialSlots(self)
@@ -88,8 +86,8 @@ function Player.setInitialSlots(self)
 end
 
 function Player.getSlotState(self, slot)
-	if (Prey.Slots[slot]) then
-		if (table.contains({CONST_SLOT_FIRST, CONST_SLOT_SECOND, CONST_SLOT_THIRD}, slot) and self:getStorageValue(Prey.Slots[slot].state) < 0) then
+	if Prey.Slots[slot] then
+		if table.contains({CONST_SLOT_FIRST, CONST_SLOT_SECOND, CONST_SLOT_THIRD}, slot) and self:getStorageValue(Prey.Slots[slot].state) < 0 then
 			self:setInitialSlots()
 		end
 		return self:getStorageValue(Prey.Slots[slot].state)
@@ -98,14 +96,13 @@ end
 
 function Player.sendResource(self, resourceType, value)
 	local typeByte = 0
-	if (resourceType == "bank") then
+	if resourceType == "bank" then
 		typeByte = 0x00
-	elseif (resourceType == "inventory") then
+	elseif resourceType == "inventory" then
 		typeByte = 0x01
-	elseif (resourceType == "prey") then
+	elseif resourceType == "prey" then
 		typeByte = 0x0A
 	end
-
 	local msg = NetworkMessage()
 	msg:addByte(0xEE)
 	msg:addByte(typeByte)
@@ -117,8 +114,8 @@ function Player.createMonsterList(self)
 	local monsters = {}
 	while #monsters ~= 3 do
 		local randomMonster = monsterList[self:getMonsterTier()][math.random(#monsterList[self:getMonsterTier()])]
-		-- Verify if monster is actually exists
-		if (MonsterType(randomMonster) and not table.contains(monsters, randomMonster)) then
+		-- Verify that monster actually exists
+		if MonsterType(randomMonster) and not table.contains(monsters, randomMonster) then
 			monsters[#monsters + 1] = randomMonster
 		end
 	end
@@ -141,7 +138,7 @@ function Player.sendPreyData(self, slot)
 	msg:addByte(slotState) -- slot state
 	
 	-- This slot will preserve the same bonus and % but the monster might be changed
-	if (slotState == Prey.StateTypes.SELECTION_CHANGE_MONSTER) then
+	if slotState == Prey.StateTypes.SELECTION_CHANGE_MONSTER then
 		print("Slot: " .. slot .. " | State: SELECTION_CHANGE_MONSTER ")
 
 		-- This values have to be stored on each slot
@@ -167,7 +164,7 @@ function Player.sendPreyData(self, slot)
 		end
 
 	-- This slot will have a new monsterList and a random bonus
-	elseif(slotState == Prey.StateTypes.SELECTION) then
+	elseif slotState == Prey.StateTypes.SELECTION then
 		print("Slot: " .. slot .. " | State: SELECTION ")
 
 		local monsterList = self:createMonsterList()
@@ -186,7 +183,7 @@ function Player.sendPreyData(self, slot)
 		end
 
 	-- This slot is active and will show current monster and bonus
-	elseif (slotState == Prey.StateTypes.ACTIVE) then
+	elseif slotState == Prey.StateTypes.ACTIVE then
 
 		-- TODO: get monster name, prey bonus, from each slot
 		local monster = MonsterType("Demon"):getOutfit()
@@ -203,10 +200,10 @@ function Player.sendPreyData(self, slot)
 		msg:addU16(os.time() + 3000) -- Time Left Bonus
 	
 	-- This slot is inactive and will not take any extra bytes
-	elseif (slotState == Prey.StateTypes.INACTIVE) then
+	elseif slotState == Prey.StateTypes.INACTIVE then
 
 		
-	elseif (slotState == Prey.StateTypes.LOCKED) then
+	elseif slotState == Prey.StateTypes.LOCKED then
 		msg.addByte(Prey.UnlockTypes.PREMIUM_OR_STORE) -- Store unlock method
 	end
 	
